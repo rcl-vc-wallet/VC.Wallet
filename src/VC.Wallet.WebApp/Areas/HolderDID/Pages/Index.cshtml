@@ -1,0 +1,73 @@
+﻿@page
+@using VC.Wallet.Core
+
+@model VC.Wallet.WebApp.Areas.HolderDID.Pages.IndexModel
+@{
+    ViewData["Title"] = "DID Store";
+}
+
+<div class="card shadow rounded mb-5">
+    <div class="card-header"><h3>@ViewData["Title"]</h3></div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> A Decentralized Identifier (DID) is used to uniquely identify the holder of a verifiable credential.</a>
+        </div>
+        @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                <p><i class="bi bi-exclamation-circle-fill"></i> @Model?.ErrorMessage</p>
+            </div>
+        }
+        else
+        {
+            <p>
+                <a class="btn btn-primary" asp-page="./Add">
+                    <i class="bi bi-plus-circle"></i> <span>Add a DID</span>
+                </a>
+            </p>
+
+            <div>
+                @if (Model?.HolderDIDs?.Count > 0)
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sort</th>
+                                <th>DID</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.HolderDIDs)
+                            {
+                                <tr>
+                                    <td>
+                                        @item.sortingCode
+                                    </td>
+                                    <td>
+                                        @item.did.Truncate(40)
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-gear"></i> Manage
+                                            </a>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                <li><a class="dropdown-item" asp-page="./Details" asp-route-id="@item.id"><i class="bi bi-list-ul"></i> Details</a></li>
+                                                <li><a class="dropdown-item" asp-page="./Delete" asp-route-id="@item.id"><i class="bi bi-trash"></i> Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p>There are no DIDs to display, why not add one.</p>
+                }
+            </div>
+        }
+    </div>
+</div>

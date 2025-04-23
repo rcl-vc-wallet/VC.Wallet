@@ -1,0 +1,66 @@
+﻿@page
+@using VC.Wallet.Core
+@model VC.Wallet.WebApp.Areas.HolderCredential.Pages.DetailsModel
+@{
+    ViewData["Title"] = "Credential Details";
+}
+
+<div class="card shadow rounded">
+    <div class="card-header">
+        <h3><a asp-page="./Index"><i class="bi bi-arrow-left-circle"></i></a> @ViewData["Title"]</h3>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                <p>ERROR: @Model.ErrorMessage</p>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <dl class="row">
+                                @if (Model?.HolderCredential?.fileType == "png")
+                                {
+                                    <img src="@Model.HolderCredential.file" height="250" />
+                                }
+                                <dt>@Html.DisplayNameFor(model => model.HolderCredential.credentialName)</dt>
+                                <dd>@Html.DisplayFor(model => model.HolderCredential.credentialName)</dd>
+                                <dt>@Html.DisplayNameFor(model => model.HolderCredential.credentialId)</dt>
+                                <dd>@Html.DisplayFor(model => model.HolderCredential.credentialId)</dd>
+                                <dt>@Html.DisplayNameFor(model => model.HolderCredential.sortingCode)</dt>
+                                <dd>@Html.DisplayFor(model => model.HolderCredential.sortingCode)</dd>
+                            </dl>
+                        </div>
+                        <div class="col-lg-6">
+                            <dl class="row">
+                                <dt>Issuer Id</dt>
+                                <dd>@Model?.AchievementCredential?.issuer?.id?.Truncate(40)</dd>
+                                @if (!string.IsNullOrEmpty(Model?.AchievementCredential?.issuer?.name))
+                                {
+                                    <dt>Issuer Name</dt>
+                                    <dd>@Model?.AchievementCredential?.issuer?.name</dd>
+                                }
+                                <dt>Valid From</dt>
+                                <dd>@Model?.AchievementCredential?.validFrom</dd>
+                                <dt>Recepient Id</dt>
+                                <dd>@Model?.AchievementCredential?.credentialSubject?.id?.Truncate(40)</dd>
+                                @if (!string.IsNullOrEmpty(Model?.AchievementCredential?.credentialSubject?.name))
+                                {
+                                    <dt>Recepient Name</dt>
+                                    <dd>@Model?.AchievementCredential?.credentialSubject?.name</dd>
+                                }
+                                <dt>Credential Description</dt>
+                                <dd>@Model?.AchievementCredential?.credentialSubject?.achievement?.description</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>

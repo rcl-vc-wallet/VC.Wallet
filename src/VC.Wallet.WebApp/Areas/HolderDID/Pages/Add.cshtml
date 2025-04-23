@@ -1,0 +1,67 @@
+﻿@page
+@model VC.Wallet.WebApp.Areas.HolderDID.Pages.AddModel
+@{
+    ViewData["Title"] = "Add DID to your Store";
+}
+
+<div class="card shadow rounded">
+    <div class="card-header">
+        <h3><a asp-page="./Index"><i class="bi bi-arrow-left-circle"></i></a> @ViewData["Title"]</h3>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                <p>ERROR: @Model.ErrorMessage</p>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-lg-8">
+                    <form enctype="multipart/form-data" method="post" id="frm_submit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="HolderDID.holderUsername" value="@User?.Identity?.Name" />
+                        <div class="form-group mt-4 mb-4">
+                            <label asp-for="HolderDID.did" class="control-label"></label>
+                            <textarea asp-for="HolderDID.did" class="form-control"></textarea>
+                            <span asp-validation-for="HolderDID.did" class="text-danger"></span>
+                            <small>Paste your copied DID here</small>
+                        </div>
+                        <div class="form-group mt-4 mb-4">
+                            <label asp-for="HolderDID.sortingCode" class="control-label"></label>
+                            <input asp-for="HolderDID.sortingCode" class="form-control" />
+                            <span asp-validation-for="HolderDID.sortingCode" class="text-danger"></span>
+                            <small>eg. A001</small>
+                        </div>
+                        <div class="form-group mt-4 mb-4">
+                            <label>Upload your private key text file</label>
+                            <span data-toggle="tooltip" title="File must be a valid text file (.txt) containing your private key. Maximum file size allowed is 250 Kb."><i class="bi bi-question-circle-fill"></i></span>
+                            <input required type="file" name="fileUpload" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Add" class="btn btn-primary" /> <a class="btn btn-secondary" asp-page="./Index">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card rounded shadow mt-2">
+                        <div class="bg-dark text-light card-header">
+                            <strong>Don't have a DID?</strong>
+                        </div>
+                        <div class="card-body bg-light">
+                            <p>If you don't have a DD you can create a new one right here.</p>
+                            <p><a class="btn btn-primary" asp-page="./Create">Create DID <i class="bi bi-arrow-right-circle"></i></a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,37 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<div class="container col-xxl-10 px-4 py-5">
+    <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+        <div class="col-lg-6">
+            <img src="~/images/hero.png" class="d-block mx-lg-auto img-fluid rounded" width="280" alt="Bootstrap Themes" loading="lazy">
+        </div>
+        <div class="col-lg-6">
+            <h1 class="display-8 fw-bold lh-1 mb-3">
+                VC Web Wallet
+            </h1>
+            <p class="lead">
+                A secure way to store and share your VCs (Verifiable Credentials) on the web.
+            </p>
+            @if (string.IsNullOrEmpty(User?.Identity?.Name))
+            {
+                <div class="alert alert-info">
+                    <div class="mb-3"><small><i class="bi bi-info-circle"></i> To sign up, click the 'Sign up now' link at the bottom of the Sign In page </small></div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn" class="btn btn-primary px-4 me-md-2">Sign Up <i class="bi bi-arrow-right-circle"></i></a>
+                    <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn" class="btn btn-outline-secondary px-4">Sign In <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <a class="btn btn-primary" asp-area="Holder" asp-page="/Details">Portal <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

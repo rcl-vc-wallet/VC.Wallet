@@ -1,0 +1,134 @@
+﻿@page
+@model VC.Wallet.WebApp.Areas.HolderCredential.Pages.AddModel
+@{
+    ViewData["Title"] = "Add a Verifiable Credential";
+}
+
+<div class="card shadow rounded">
+    <div class="card-header">
+        <h3><a asp-page="./Index"><i class="bi bi-arrow-left-circle"></i></a> @ViewData["Title"]</h3>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                <p>ERROR: @Model.ErrorMessage</p>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-lg-8">
+                    <form enctype="multipart/form-data" method="post" id="frm_submit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="HolderCredential.holderUsername" value="@User?.Identity?.Name" />
+                        <input type="hidden" asp-for="HolderCredential.credentialName" value="pending" />
+                        <input type="hidden" asp-for="HolderCredential.credentialId" value="pending" />
+                        <input type="hidden" asp-for="HolderCredential.fileType" value="pending" />
+                        <input type="hidden" asp-for="HolderCredential.file" value="pending" />
+                        <div class="form-group mt-4 mb-4">
+                            <label asp-for="HolderCredential.sortingCode" class="control-label"></label>
+                            <input asp-for="HolderCredential.sortingCode" class="form-control" />
+                            <span asp-validation-for="HolderCredential.sortingCode" class="text-danger"></span>
+                            <small>eg. A001</small>
+                        </div>
+                        <div class="form-group mt-4 mb-4">
+                            <span>
+                                <label class="control-label">Select a Credential Group</label>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#modalDataInput">
+                                    <small><i class="bi bi-plus-circle"></i> Add New</small>
+                                </a>
+                            </span>
+                            <select id="selField" asp-for="HolderCredential.groupId" class="form-control">
+                            </select>
+                            <span asp-validation-for="HolderCredential.groupId" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mt-4 mb-4">
+                            <label>Upload your Credential File</label>
+                            <span data-toggle="tooltip" title="File must be a valid TEXT (.txt) or PNG image (.png) containing achievement meta data. Maximum file size allowed is 500 Kb."><i class="bi bi-question-circle-fill"></i></span>
+                            <input required type="file" name="fileUpload" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Add" class="btn btn-primary" /> <a class="btn btn-secondary" asp-page="./Index">Cancel</a>
+                        </div>
+                    </form>
+
+                     <div class="modal fade" id="modalDataInput" tabindex="-1" aria-labelledby="modalDataInput" aria-hidden="true">
+                        <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                                    <h5 class="modal-title" id="modalLabel">Add a new Credential Group</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post">
+                                <div class="form-group mt-4 mb-4">
+                                    <label class="control-label">Group Name</label>
+                                            <input type="text" id="inputFieldGroupName" class="form-control" />
+                                </div>
+                                <div class="form-group mt-4 mb-4">
+                                    <label class="control-label">Sorting Code</label>
+                                            <input type="text" id="inputFieldGroupSortingCode" class="form-control" />
+                                    <small>eg. A001</small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="saveNewInputData()">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+
+                </div>
+                <div class="col-lg-4">
+                    <div class="card rounded shadow mt-2">
+                        <div class="bg-dark text-light card-header">
+                            <strong>Don't have a Credential?</strong>
+                        </div>
+                        <div class="card-body bg-light">
+                            <p>If you don't have a Credential you can create one right here.</p>
+                            <p><a class="btn btn-primary" asp-page="./Create">Create Credential <i class="bi bi-arrow-right-circle"></i></a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script type="text/javascript">
+
+        function getSelectFieldData() {
+            var url = 'Add?handler=CredentialGroups';
+            $.getJSON(url, function (data) {
+                var item = '<option value=""></option>';
+                $("#selField").empty();
+                $.each(data, function (i, value) {
+                    item += '<option value="' + value.id + '">' + value.groupName + '</option>'
+                });
+                $("#selField").html(item);
+            });
+        }
+
+        function saveNewInputData() {
+            var url = 'Add?handler=AddNewCredentialGroup';
+            var groupName = $('#inputFieldGroupName').val();
+            var sortingCode = $('#inputFieldGroupSortingCode').val();
+            $.getJSON(url, { groupName, sortingCode }, function (data) {
+                getSelectFieldData();
+            });
+            $('#modalDataInput').modal('hide');
+        }
+
+        $(document).ready(function () {
+            getSelectFieldData();
+        });
+    </script>
+}

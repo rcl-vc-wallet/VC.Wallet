@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VC Web Wallet</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/VC.Web.Wallet.WebApp.styles.css" asp-append-version="true" />
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/icons/fonts/bootstrap-icons.css">
+    @RenderSection("Head", required: false)
+</head>
+<body id="page-top">
+    <partial name="_LoadingPartial" />
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gray-900 sidebar sidebar-dark accordion" id="accordionSidebar">
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand align-items-start justify-content-start" asp-area="" asp-page="/Index">
+                <div class="sidebar-brand-text mx-3"><i class="bi bi-wallet2"></i> Wallet</div>
+            </a>
+            <!-- End Sidebar - Brand -->
+
+            <hr class="sidebar-divider my-0">
+
+            <!-- Holder -->
+            <li class="nav-item">
+                <a class="nav-link" asp-page="/Details" asp-area="Holder">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <!-- End Holder -->
+            <!-- DID -->
+            <li class="nav-item">
+                <a class="nav-link" asp-page="/Index" asp-area="HolderDID">
+                    <i class="bi bi-file-medical"></i>
+                    <span>DID Store</span>
+                </a>
+            </li>
+            <!-- End DID -->
+            <!-- Credential -->
+            <li class="nav-item">
+                <a class="nav-link" asp-page="/Index" asp-area="HolderCredential">
+                    <i class="bi bi-shield"></i>
+                    <span>Credentials</span>
+                </a>
+            </li>
+            <!-- Credential -->
+            <!-- Admin -->
+            @if (AdminService.IsAdmin(User))
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-page="/Index" asp-area="TrustedIssuer">
+                        <i class="bi bi-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            }
+            <!-- Credential -->
+
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <!-- Main Content -->
+            <div id="content">
+                <!-- Topbar -->
+                <header>
+                    <nav class="navbar navbar-expand-lg navbar-toggleable-lg navbar-dark bg-gray-900 border-bottom box-shadow mb-3">
+                        <div class="container">
+                            <a class="navbar-brand" asp-area="" asp-page="/Index">Home</a>
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-controls="navbarSupportedContent"
+                                    aria-expanded="false" aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div id="main-menu" class="navbar-collapse collapse d-lg-inline-flex flex-sm-row-reverse text-light">
+                                <partial name="_LoginPartial" />
+                            </div>
+                        </div>
+                    </nav>
+                </header>
+                <!--End Topbar -->
+                <!-- Page Content -->
+                <div class="container-fluid">
+                    <main role="main" class="pb-3">
+                        @RenderBody()
+                    </main>
+                </div>
+            </div>
+            <!-- Main Content -->
+        </div>
+        <!-- End Content Wrapper -->
+    </div>
+    <!-- Page Wrapper -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/sb-admin-2.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

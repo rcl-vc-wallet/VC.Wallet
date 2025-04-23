@@ -1,0 +1,115 @@
+﻿#nullable disable
+
+using VC.Wallet.Core.Credential;
+
+namespace VC.Wallet.Core.Test
+{
+    [TestClass]
+    public class CredentialTest
+    {
+        private readonly IDemoCredentialService _demoCredentialService;
+        private readonly ICryptoAlgorithmFactory _cryptoAlgorithmFactory;
+        private readonly ICredentialResolverFactory _credentialResolverFactory;
+        private readonly IDIDJwkService _didJwkService;
+        private readonly IJwtOperator _jwtOperator;
+
+        public CredentialTest()
+        {
+            _demoCredentialService = (IDemoCredentialService)DependencyResolver.ServiceProvider().GetService(typeof(IDemoCredentialService));
+            _cryptoAlgorithmFactory = (ICryptoAlgorithmFactory)DependencyResolver.ServiceProvider().GetService(typeof(ICryptoAlgorithmFactory));
+            _credentialResolverFactory = (ICredentialResolverFactory)DependencyResolver.ServiceProvider().GetService(typeof(ICredentialResolverFactory));
+            _didJwkService = (IDIDJwkService)DependencyResolver.ServiceProvider().GetService(typeof(IDIDJwkService));
+            _jwtOperator = (IJwtOperator)DependencyResolver.ServiceProvider().GetService(typeof(IJwtOperator));
+        }
+
+        [TestMethod]
+        public async Task ValidateCredential()
+        {
+            try
+            {
+                string jwtCompact = CreateJwtCompact();
+                ValidationBuilder validationBuilder = new ValidationBuilder(jwtCompact);
+
+                JwkBase jwkBase = _jwtOperator.GetPublicJwkBase(jwtCompact);
+                string algo = jwkBase.alg.ToLower();
+
+                if (algo == "rs256")
+                {
+                    var _cryptoAlgorithm = _cryptoAlgorithmFactory.Create<RSAJwk>();
+
+                    CheckForValidSignature<RSAJwk> _checkForValidSignature =
+                        new CheckForValidSignature<RSAJwk>(_jwtOperator, _cryptoAlgorithm);
+
+                    validationBuilder.Add(_checkForValidSignature);
+                }
+                else
+                {
+                    throw new Exception("Only RS256 is supported as this time");
+                }
+
+                validationBuilder.Add(new CheckForRequiredData(_jwtOperator));
+                ValidationResponse validationResponse = await validationBuilder.ValidateAsync();
+
+                Assert.AreEqual(true,validationResponse.isValid);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                Assert.Fail();
+            }
+        }
+
+        [TestMethod]
+        public void CreateDemoCredentialTest()
+        {
+            try
+            {
+                string jwtComapct = CreateJwtCompact();
+                Assert.IsNotNull(jwtComapct);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                Assert.Fail();
+            }
+        }
+
+        [TestMethod]
+        public void ResolveCredentialFromTxtTest()
+        {
+            string credentialFileContent = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImt0eSI6IlJTQSIsIm4iOiIxUXF3TF9ZT3hMeDN5OV9Ga3kwMjJrV3NmUWwySVRza0Q1dlhBc3pmaWx4bGhGQTh1WUlQdkNhRDA0aW1DVW5uNDI4NkJqeUllV3p1RF9yRWpYUHFFeHVJWHY4OVQ2eTI0cllCOFpydXdNR29hcVROSEJ2TEE3dHdXaWZWMlFpRFN4VU5RNDRqeWEzTmlnc3pkMnJFdUp6eG5vaDFqWWgwa254bnFmdDlXZFZPOHVPeWR4NlRqRmJ6MFd1djBfM2l1aGtQZjBUSlhWVktGVG1TenhyMDlFTVZwYUNhTF9KSVF2MmhuQ1o1RWFtRGE3b25WZDVXVGloQThMRkVfRzNaczZxRzQ2OXU1Qm95SDdoVnJwbV9GSXE5Y0t4d0JwSWF3aXNuNmxEVVdVTkp4RjNCUElTbGhDenVZQzVKaE5lTDFqMy10SEM0NWIyZHN4aTdPdE5QMVEiLCJqd2siOnsibiI6IjFRcXdMX1lPeEx4M3k5X0ZreTAyMmtXc2ZRbDJJVHNrRDV2WEFzemZpbHhsaEZBOHVZSVB2Q2FEMDRpbUNVbm40Mjg2Qmp5SWVXenVEX3JFalhQcUV4dUlYdjg5VDZ5MjRyWUI4WnJ1d01Hb2FxVE5IQnZMQTd0d1dpZlYyUWlEU3hVTlE0NGp5YTNOaWdzemQyckV1Snp4bm9oMWpZaDBrbnhucWZ0OVdkVk84dU95ZHg2VGpGYnowV3V2MF8zaXVoa1BmMFRKWFZWS0ZUbVN6eHIwOUVNVnBhQ2FMX0pJUXYyaG5DWjVFYW1EYTdvblZkNVdUaWhBOExGRV9HM1pzNnFHNDY5dTVCb3lIN2hWcnBtX0ZJcTljS3h3QnBJYXdpc242bERVV1VOSnhGM0JQSVNsaEN6dVlDNUpoTmVMMWozLXRIQzQ1YjJkc3hpN090TlAxUSIsImUiOiJBUUFCIn0sImUiOiJBUUFCIn0.eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3B1cmwuaW1zZ2xvYmFsLm9yZy9zcGVjL29iL3YzcDAvY29udGV4dC0zLjAuMy5qc29uIl0sImlkIjoidXJuOnV1aWQ6MDU0OGI0ODAtNmQwNC00MzJmLWFjNDYtODFkMjcxYjEwMGRjIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIk9wZW5CYWRnZUNyZWRlbnRpYWwiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpoYkdjaU9pSlNVekkxTmlJc0ltdDBlU0k2SWxKVFFTSXNJbTRpT2lJeFVYRjNURjlaVDNoTWVETjVPVjlHYTNrd01qSnJWM05tVVd3eVNWUnphMFExZGxoQmMzcG1hV3g0YkdoR1FUaDFXVWxRZGtOaFJEQTBhVzFEVlc1dU5ESTROa0pxZVVsbFYzcDFSRjl5UldwWVVIRkZlSFZKV0hZNE9WUTJlVEkwY2xsQ09GcHlkWGROUjI5aGNWUk9TRUoyVEVFM2RIZFhhV1pXTWxGcFJGTjRWVTVSTkRScWVXRXpUbWxuYzNwa01uSkZkVXA2ZUc1dmFERnFXV2d3YTI1NGJuRm1kRGxYWkZaUE9IVlBlV1I0TmxScVJtSjZNRmQxZGpCZk0ybDFhR3RRWmpCVVNsaFdWa3RHVkcxVGVuaHlNRGxGVFZad1lVTmhURjlLU1ZGMk1taHVRMW8xUldGdFJHRTNiMjVXWkRWWFZHbG9RVGhNUmtWZlJ6TmFjelp4UnpRMk9YVTFRbTk1U0Rkb1ZuSndiVjlHU1hFNVkwdDRkMEp3U1dGM2FYTnVObXhFVlZkVlRrcDRSak5DVUVsVGJHaERlblZaUXpWS2FFNWxUREZxTXkxMFNFTTBOV0l5WkhONGFUZFBkRTVRTVZFaUxDSnFkMnNpT25zaWJpSTZJakZSY1hkTVgxbFBlRXg0TTNrNVgwWnJlVEF5TW10WGMyWlJiREpKVkhOclJEVjJXRUZ6ZW1acGJIaHNhRVpCT0hWWlNWQjJRMkZFTURScGJVTlZibTQwTWpnMlFtcDVTV1ZYZW5WRVgzSkZhbGhRY1VWNGRVbFlkamc1VkRaNU1qUnlXVUk0V25KMWQwMUhiMkZ4VkU1SVFuWk1RVGQwZDFkcFpsWXlVV2xFVTNoVlRsRTBOR3A1WVROT2FXZHplbVF5Y2tWMVNucDRibTlvTVdwWmFEQnJibmh1Y1daME9WZGtWazg0ZFU5NVpIZzJWR3BHWW5vd1YzVjJNRjh6YVhWb2ExQm1NRlJLV0ZaV1MwWlViVk42ZUhJd09VVk5WbkJoUTJGTVgwcEpVWFl5YUc1RFdqVkZZVzFFWVRkdmJsWmtOVmRVYVdoQk9FeEdSVjlITTFwek5uRkhORFk1ZFRWQ2IzbElOMmhXY25CdFgwWkpjVGxqUzNoM1FuQkpZWGRwYzI0MmJFUlZWMVZPU25oR00wSlFTVk5zYUVONmRWbEROVXBvVG1WTU1Xb3pMWFJJUXpRMVlqSmtjM2hwTjA5MFRsQXhVU0lzSW1VaU9pSkJVVUZDSW4wc0ltVWlPaUpCVVVGQ0luMCIsInR5cGUiOlsiUHJvZmlsZSJdLCJuYW1lIjoiVkMgV2ViIFdhbGxldCJ9LCJ2YWxpZEZyb20iOiIyMi8wNC8yMDI1IDI6Mjk6NTIgcG0iLCJ2YWxpZFVudGlsIjoiMjIvMDQvMjA0NSAyOjI5OjUyIHBtIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6andrOmV5SmhiR2NpT2lKU1V6STFOaUlzSW10MGVTSTZJbEpUUVNJc0ltNGlPaUo2WW0xVmRtZFRXVjlNVlRWWlNVTmtVWE5MU1RoM1UwRXdkMFZUUldSdFEyVkJNMlpTVVhkcGNFWnBYMU41V0hKeVpXeERVbXN3ZUMxWVdISlRVbEpMTjBoeGFXWXhhMk5VWkhKTVZFdEJPVFZtZGw5VVZGY3diVmhFZEZkMldDMUxWM1JhZW1sSExVUmhVV0Y2VjNCdFZ6bFNYMVpzUVZkcE9GUTRMVVJtVG1OUFkyMUJjRWRpT0hFeWNUVmhZM2h4ZWt4MFJERnlTMEpTTUhSaE1FRXdTREJwTFY5alQzVllOa2xYVlhobU56UkdOMGxrVkhKVmNIQnZkeTFmTTNBNVJrVkJOVmxwY1VaVlNVa3habUpKV2pWcGRGbzNlak14VTI5a1UyYzVZV2RWT0U5UlJ6VnpiVlozYWxaeGRXOTVkM0paZFVGUWVraHhSQzEzU1U0MVZEVkhOM054WWkxc1NXbHZjRGsyYUdWTlFVeHRWRU40Y0U1M1dWVklORWt3WkVWSllqVTNjakpNV1ZoUlVtTmxha056Y0ZSemEyTldhWHBwWVRGdVlVaE9la00yTTFKS1l6VnNVRzB5YzFrd1Vub3hibEVpTENKcWQyc2lPbnNpYmlJNklucGliVlYyWjFOWlgweFZOVmxKUTJSUmMwdEpPSGRUUVRCM1JWTkZaRzFEWlVFelpsSlJkMmx3Um1sZlUzbFljbkpsYkVOU2F6QjRMVmhZY2xOU1VrczNTSEZwWmpGclkxUmtja3hVUzBFNU5XWjJYMVJVVnpCdFdFUjBWM1pZTFV0WGRGcDZhVWN0UkdGUllYcFhjRzFYT1ZKZlZteEJWMms0VkRndFJHWk9ZMDlqYlVGd1IySTRjVEp4TldGamVIRjZUSFJFTVhKTFFsSXdkR0V3UVRCSU1Ha3RYMk5QZFZnMlNWZFZlR1kzTkVZM1NXUlVjbFZ3Y0c5M0xWOHpjRGxHUlVFMVdXbHhSbFZKU1RGbVlrbGFOV2wwV2pkNk16RlRiMlJUWnpsaFoxVTRUMUZITlhOdFZuZHFWbkYxYjNsM2NsbDFRVkI2U0hGRUxYZEpUalZVTlVjM2MzRmlMV3hKYVc5d09UWm9aVTFCVEcxVVEzaHdUbmRaVlVnMFNUQmtSVWxpTlRkeU1reFpXRkZTWTJWcVEzTndWSE5yWTFacGVtbGhNVzVoU0U1NlF6WXpVa3BqTld4UWJUSnpXVEJTZWpGdVVTSXNJbVVpT2lKQlVVRkNJbjBzSW1VaU9pSkJVVUZDSW4wIiwibmFtZSI6IkFuaWwgUmlwbGEiLCJ0eXBlIjpbIkFjaGlldmVtZW50U3ViamVjdCJdLCJhY2hpZXZlbWVudCI6eyJpZCI6InVybjp1dWlkOjA4ZTI2ZDIyLThkY2EtNDU1OC05YzEiLCJ0eXBlIjpbIkFjaGlldmVtZW50Il0sIm5hbWUiOiJEZW1vIFZlcmlmaWFibGUgQ3JlZGVudGlhbCIsImRlc2NyaXB0aW9uIjoiVGhpcyBjcmVkZW50aWFsIGlzIGlzc3VlZCB0byBhIHVzZXIgd2hvIGNhbiB1c2UgdGhlIFZlcmlmaWFibGUgQ3JlZGVudGlhbCBXZWIgV2FsbGV0LiIsImNyaXRlcmlhIjp7Im5hcnJhdGl2ZSI6IlRvIG9idGFpbiB0aGlzIGNyZWRlbnRpYWwgdGhlIHVzZXIgaXMgYWJsZSB0byBjcmVhdGUgYSBwcm9maWxlLCBESUQgYW5kIGFkZCBhIGNyZWRlbnRpYWwgdG8gdGhlaXIgVkNsIFdlYiBXYWxsZXQuIn19fSwiaXNzIjoiZGlkOmp3azpleUpoYkdjaU9pSlNVekkxTmlJc0ltdDBlU0k2SWxKVFFTSXNJbTRpT2lJeFVYRjNURjlaVDNoTWVETjVPVjlHYTNrd01qSnJWM05tVVd3eVNWUnphMFExZGxoQmMzcG1hV3g0YkdoR1FUaDFXVWxRZGtOaFJEQTBhVzFEVlc1dU5ESTROa0pxZVVsbFYzcDFSRjl5UldwWVVIRkZlSFZKV0hZNE9WUTJlVEkwY2xsQ09GcHlkWGROUjI5aGNWUk9TRUoyVEVFM2RIZFhhV1pXTWxGcFJGTjRWVTVSTkRScWVXRXpUbWxuYzNwa01uSkZkVXA2ZUc1dmFERnFXV2d3YTI1NGJuRm1kRGxYWkZaUE9IVlBlV1I0TmxScVJtSjZNRmQxZGpCZk0ybDFhR3RRWmpCVVNsaFdWa3RHVkcxVGVuaHlNRGxGVFZad1lVTmhURjlLU1ZGMk1taHVRMW8xUldGdFJHRTNiMjVXWkRWWFZHbG9RVGhNUmtWZlJ6TmFjelp4UnpRMk9YVTFRbTk1U0Rkb1ZuSndiVjlHU1hFNVkwdDRkMEp3U1dGM2FYTnVObXhFVlZkVlRrcDRSak5DVUVsVGJHaERlblZaUXpWS2FFNWxUREZxTXkxMFNFTTBOV0l5WkhONGFUZFBkRTVRTVZFaUxDSnFkMnNpT25zaWJpSTZJakZSY1hkTVgxbFBlRXg0TTNrNVgwWnJlVEF5TW10WGMyWlJiREpKVkhOclJEVjJXRUZ6ZW1acGJIaHNhRVpCT0hWWlNWQjJRMkZFTURScGJVTlZibTQwTWpnMlFtcDVTV1ZYZW5WRVgzSkZhbGhRY1VWNGRVbFlkamc1VkRaNU1qUnlXVUk0V25KMWQwMUhiMkZ4VkU1SVFuWk1RVGQwZDFkcFpsWXlVV2xFVTNoVlRsRTBOR3A1WVROT2FXZHplbVF5Y2tWMVNucDRibTlvTVdwWmFEQnJibmh1Y1daME9WZGtWazg0ZFU5NVpIZzJWR3BHWW5vd1YzVjJNRjh6YVhWb2ExQm1NRlJLV0ZaV1MwWlViVk42ZUhJd09VVk5WbkJoUTJGTVgwcEpVWFl5YUc1RFdqVkZZVzFFWVRkdmJsWmtOVmRVYVdoQk9FeEdSVjlITTFwek5uRkhORFk1ZFRWQ2IzbElOMmhXY25CdFgwWkpjVGxqUzNoM1FuQkpZWGRwYzI0MmJFUlZWMVZPU25oR00wSlFTVk5zYUVONmRWbEROVXBvVG1WTU1Xb3pMWFJJUXpRMVlqSmtjM2hwTjA5MFRsQXhVU0lzSW1VaU9pSkJVVUZDSW4wc0ltVWlPaUpCVVVGQ0luMCIsImp0aSI6InVybjp1dWlkOjA1NDhiNDgwLTZkMDQtNDMyZi1hYzQ2LTgxZDI3MWIxMDBkYyIsInN1YiI6ImRpZDpqd2s6ZXlKaGJHY2lPaUpTVXpJMU5pSXNJbXQwZVNJNklsSlRRU0lzSW00aU9pSjZZbTFWZG1kVFdWOU1WVFZaU1VOa1VYTkxTVGgzVTBFd2QwVlRSV1J0UTJWQk0yWlNVWGRwY0VacFgxTjVXSEp5Wld4RFVtc3dlQzFZV0hKVFVsSkxOMGh4YVdZeGEyTlVaSEpNVkV0Qk9UVm1kbDlVVkZjd2JWaEVkRmQyV0MxTFYzUmFlbWxITFVSaFVXRjZWM0J0VnpsU1gxWnNRVmRwT0ZRNExVUm1UbU5QWTIxQmNFZGlPSEV5Y1RWaFkzaHhla3gwUkRGeVMwSlNNSFJoTUVFd1NEQnBMVjlqVDNWWU5rbFhWWGhtTnpSR04wbGtWSEpWY0hCdmR5MWZNM0E1UmtWQk5WbHBjVVpWU1VreFptSkpXalZwZEZvM2VqTXhVMjlrVTJjNVlXZFZPRTlSUnpWemJWWjNhbFp4ZFc5NWQzSlpkVUZRZWtoeFJDMTNTVTQxVkRWSE4zTnhZaTFzU1dsdmNEazJhR1ZOUVV4dFZFTjRjRTUzV1ZWSU5Fa3daRVZKWWpVM2NqSk1XVmhSVW1ObGFrTnpjRlJ6YTJOV2FYcHBZVEZ1WVVoT2VrTTJNMUpLWXpWc1VHMHljMWt3VW5veGJsRWlMQ0pxZDJzaU9uc2liaUk2SW5waWJWVjJaMU5aWDB4Vk5WbEpRMlJSYzB0Sk9IZFRRVEIzUlZORlpHMURaVUV6WmxKUmQybHdSbWxmVTNsWWNuSmxiRU5TYXpCNExWaFljbE5TVWtzM1NIRnBaakZyWTFSa2NreFVTMEU1TldaMlgxUlVWekJ0V0VSMFYzWllMVXRYZEZwNmFVY3RSR0ZSWVhwWGNHMVhPVkpmVm14QlYyazRWRGd0UkdaT1kwOWpiVUZ3UjJJNGNUSnhOV0ZqZUhGNlRIUkVNWEpMUWxJd2RHRXdRVEJJTUdrdFgyTlBkVmcyU1ZkVmVHWTNORVkzU1dSVWNsVndjRzkzTFY4emNEbEdSVUUxV1dseFJsVkpTVEZtWWtsYU5XbDBXamQ2TXpGVGIyUlRaemxoWjFVNFQxRkhOWE50Vm5kcVZuRjFiM2wzY2xsMVFWQjZTSEZFTFhkSlRqVlVOVWMzYzNGaUxXeEphVzl3T1Rab1pVMUJURzFVUTNod1RuZFpWVWcwU1RCa1JVbGlOVGR5TWt4WldGRlNZMlZxUTNOd1ZITnJZMVpwZW1saE1XNWhTRTU2UXpZelVrcGpOV3hRYlRKeldUQlNlakZ1VVNJc0ltVWlPaUpCVVVGQ0luMHNJbVVpT2lKQlVVRkNJbjAifQ.w7ABUpfTLtuJVm-AyLH07Snws-bDNzjESRNVkz1VM3-40QrnJAW8bzcUDqVIJ1DdCWiThBb2bKrfSjH102otaaAxtM4lKlKcz_oMkTySlHJDU5tBaiOXpbF5jzhvLCgTfXDZH84JcBdHKZVhI2oHp6jJZ22eKflRrSl7LY3mz2Uw-gYTleAyGQvAWmWHWXQEzqg9x__C9pX18qt1_Fr1NayytprooN6GMm3mrQDhfYOX5fiGKk6_PevN6Ud8D_r6dicXYLFH89oGeFgiSJuXuWjjjo73uQpmHPDTtrFgw19J8fCK0XQWJcVWyz9bW1U4hJylJXSHJ3cQUOcWn0WJEg\r\n";
+            ICredentialResolver  credentialResolver = _credentialResolverFactory.Create("txt");
+
+            try
+            {
+                AchievementCredential achievementCredential = credentialResolver.Resolve(credentialFileContent);
+                Assert.AreNotEqual(string.Empty, achievementCredential?.id);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                Assert.Fail();
+            }
+
+        }
+
+        private string CreateJwtCompact()
+        {
+            ICryptoAlgorithm<RSAJwk> _cryptoAlgorithm = _cryptoAlgorithmFactory.Create<RSAJwk>();
+            Keys hoderKeys = _cryptoAlgorithm.GenerateKeys();
+            RSAJwk holderPublicJwk = _cryptoAlgorithm.GetPublicJwk(hoderKeys.publicKey);
+            string holderDID = _didJwkService.CreateDID(holderPublicJwk);
+
+            Keys issuerKeys = _cryptoAlgorithm.GenerateKeys();
+            RSAJwk issuerPublicJwk = _cryptoAlgorithm.GetPublicJwk(issuerKeys.publicKey);
+            string issuerDID = _didJwkService.CreateDID(issuerPublicJwk);
+
+            AchievementCredential achievementCredential = _demoCredentialService
+                 .CreateDemoAchievementCredential(holderDID, "John Doe", issuerDID);
+
+            Jwt jwt = _jwtOperator.Sign(achievementCredential, hoderKeys, _cryptoAlgorithm); // with JWK parameters
+            string jwtCompact = _jwtOperator.ToJwtCompact(jwt);
+            return jwtCompact;
+        }
+    }
+}

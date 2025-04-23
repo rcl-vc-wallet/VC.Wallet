@@ -1,0 +1,44 @@
+﻿@page
+@model VC.Wallet.WebApp.Areas.TrustedIssuer.Pages.DetailsModel
+@{
+    ViewData["Title"] = "Trusted Issuer Details";
+}
+
+<div class="card shadow rounded">
+    <div class="card-header">
+        <h3><a asp-page="./Index"><i class="bi bi-arrow-left-circle"></i></a> @ViewData["Title"]</h3>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                <p>ERROR: @Model.ErrorMessage</p>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt><strong>@Html.DisplayNameFor(model => model.TrustedIssuer.name)</strong></dt>
+                        <dd>@Html.DisplayFor(model => model.TrustedIssuer.name)</dd>
+                        <dt><strong>@Html.DisplayNameFor(model => model.TrustedIssuer.description)</strong></dt>
+                        <dd>@Html.DisplayFor(model => model.TrustedIssuer.description)</dd>
+                        <dt><strong>@Html.DisplayNameFor(model => model.TrustedIssuer.countryCode)</strong></dt>
+                        <dd>@Html.DisplayFor(model => model.TrustedIssuer.countryCode)</dd>
+                        <dt><strong>@Html.DisplayNameFor(model => model.TrustedIssuer.region)</strong></dt>
+                        <dd>@Html.DisplayFor(model => model.TrustedIssuer.region)</dd>
+                        @if(!string.IsNullOrEmpty(Model?.TrustedIssuer?.websiteUrl))
+                        {
+                        <dt><strong>@Html.DisplayNameFor(model => model.TrustedIssuer.websiteUrl)</strong></dt>
+                        <dd>@Html.DisplayFor(model => model.TrustedIssuer.websiteUrl)</dd>
+                        }
+                        <dt><strong>@Html.DisplayNameFor(model => model.TrustedIssuer.did)</strong></dt>
+                        <dd class="bg-light p-3">@Html.DisplayFor(model => model.TrustedIssuer.did)</dd>
+                    </dl>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
