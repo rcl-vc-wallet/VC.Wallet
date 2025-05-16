@@ -16,8 +16,7 @@ namespace VC.Wallet.Core
             services.TryAddTransient<ICryptoAlgorithmFactory, CryptoAlgorithmFactory>();
             services.TryAddTransient<IJwtOperator, JwtOperator>();
             services.TryAddTransient<IDIDJwkService, DIDJwkService>();
-            services.TryAddTransient<IImageFactory, ImageFactory>();
-            services.TryAddTransient<IDemoCredentialService, DemoCredentialService>();
+            
             services.TryAddTransient<ICredentialResolverFactory, CredentialResolverFactory>();
 
             services.Configure<IConfigurationOptions>(configureOptions);

@@ -22,9 +22,8 @@
 
             try
             {                
-                T publicJwk = _jwtOperator.GetUnverifiedPublicJwk<T>(jwtCompact);
-                T verifiedPublicJwk = await _cryptoAlgorithm.VerifyPublicJwkAsync(publicJwk);
-                string publicKey = _cryptoAlgorithm.GetPublicKey(verifiedPublicJwk);
+                T publicJwk = _jwtOperator.GetPublicJwk<T>(jwtCompact);
+                string publicKey = _cryptoAlgorithm.GetPublicKey(publicJwk);
                 bool b = _jwtOperator.Verify<T>(jwtCompact, publicKey, _cryptoAlgorithm);
 
                 if(b == true)

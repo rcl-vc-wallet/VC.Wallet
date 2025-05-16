@@ -9,20 +9,7 @@ namespace VC.Wallet.Core
     {
         private static HttpClient _httpClient = new HttpClient();
 
-        public Keys GenerateKeys()
-        {
-            RSA rsa = RSA.Create();
-
-            Keys keys = new Keys
-            {
-                publicKey = rsa.ExportRSAPublicKeyPem(),
-                privateKey = rsa.ExportRSAPrivateKeyPem()
-            };
-
-            return keys;
-        }
-
-        public RSAJwk GetPublicJwk(string publicKey, string typ ="")
+        public RSAJwk GetPublicJwk(string publicKey)
         {
             RSA rsa = RSA.Create();
             rsa.ImportFromPem(publicKey);
@@ -32,70 +19,28 @@ namespace VC.Wallet.Core
             string n = Base64UrlEncoder.Encode(rsaParameters.Modulus);
             string e = Base64UrlEncoder.Encode(rsaParameters.Exponent);
 
-            RSAKey rsaKey = new RSAKey
-            {
-                e = e,
-                n = n,
-            };
-
             RSAJwk rsaJwk = new RSAJwk
             {
                 kty = "RSA",
-                alg = "RS256",
                 e = e,
-                n = n,
-                jwk = rsaKey
+                n = n
             };
-
-            if (typ != "")
-            {
-                rsaJwk.typ = typ;
-            }
 
             return rsaJwk;
         }
 
-        public RSAJwk SetPublicJwkKeyId(string keyId, string typ = "")
-        {
-            RSAJwk rsaJwk = new RSAJwk
-            {
-                kty = "RSA",
-                alg = "RS256",
-                kid = keyId
-            };
-
-            if(typ != "")
-            {
-                rsaJwk.typ = typ;
-            }
-
-            return rsaJwk;
-        }
-
-        public string GetPublicKey(RSAJwk verifiedPublicJwk)
+        public string GetPublicKey(RSAJwk RsaJwk)
         {
             RSAParameters rsaParameters = new RSAParameters
             {
-                Modulus = Base64UrlEncoder.DecodeBytes(verifiedPublicJwk.jwk?.n),
-                Exponent = Base64UrlEncoder.DecodeBytes(verifiedPublicJwk.jwk?.e)
+                Modulus = Base64UrlEncoder.DecodeBytes(RsaJwk.n),
+                Exponent = Base64UrlEncoder.DecodeBytes(RsaJwk.e)
             };
 
             RSA rsa = RSA.Create(rsaParameters);
 
             string rsaPublicKey = rsa.ExportRSAPublicKeyPem();
             return rsaPublicKey;
-        }
-
-        public async Task<RSAJwk> VerifyPublicJwkAsync(RSAJwk publicJwk)
-        {
-            RSAJwk rsaJwk = GetPublicJwkFromParameters(publicJwk);
-
-            if(string.IsNullOrEmpty(rsaJwk?.e) || string.IsNullOrEmpty(rsaJwk?.n))
-            {
-              rsaJwk =  await GetPublicJwkFromKidAsync(rsaJwk.kid);
-            }
-
-            return rsaJwk;
         }
 
         public byte[] SignData(byte[] data, string privateKey)
@@ -113,30 +58,7 @@ namespace VC.Wallet.Core
             return rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }
 
-        private RSAJwk GetPublicJwkFromParameters(RSAJwk rsaJwk)
-        {
-            if (!string.IsNullOrEmpty(rsaJwk?.e) && !string.IsNullOrEmpty(rsaJwk?.n))
-            {
-                return rsaJwk;
-            }
-            else if (!string.IsNullOrEmpty(rsaJwk?.jwk?.e) && !string.IsNullOrEmpty(rsaJwk?.jwk?.n))
-            {
-                rsaJwk.e = rsaJwk.jwk.e;
-                rsaJwk.n = rsaJwk.jwk.n;
-
-                return rsaJwk;
-            }
-            else if (!string.IsNullOrEmpty(rsaJwk?.kid))
-            {
-                return rsaJwk;
-            }
-            else
-            {
-                throw new Exception("Could not obtain jwk or kid");
-            }
-        }
-
-        private async Task<RSAJwk> GetPublicJwkFromKidAsync(string kid)
+        public async Task<RSAJwk> GetPublicJwkFromKidAsync(string kid)
         {
             try
             {
@@ -157,6 +79,47 @@ namespace VC.Wallet.Core
             {
                 throw new Exception($"Could not get jwk from kid, {ex.Message}");
             }
+        }
+
+        public JwtHeader<RSAJwk> GetJwtHeader(string publicKey, string type)
+        {
+            RSA rsa = RSA.Create();
+            rsa.ImportFromPem(publicKey);
+
+            RSAParameters rsaParameters = rsa.ExportParameters(false);
+
+            string n = Base64UrlEncoder.Encode(rsaParameters.Modulus);
+            string e = Base64UrlEncoder.Encode(rsaParameters.Exponent);
+
+            RSAJwk rsaJwk = new RSAJwk
+            {
+                kty = "RSA",
+                e = e,
+                n = n
+            };
+
+            return new JwtHeader<RSAJwk>
+            {
+                alg = "RS256",
+                typ = type,
+                jwk = rsaJwk
+            };
+        }
+
+        public JwtHeader<RSAJwk> SetKeyIdJwtHeader(string keyId, string type)
+        {
+            RSAJwk rsaJwk = new RSAJwk
+            {
+                kty = "RSA",
+                kid = keyId
+            };
+
+            return new JwtHeader<RSAJwk>
+            {
+                alg = "RS256",
+                typ = type,
+                jwk = rsaJwk
+            };
         }
     }
 }

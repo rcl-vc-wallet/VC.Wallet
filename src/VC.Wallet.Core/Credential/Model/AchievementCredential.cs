@@ -54,16 +54,12 @@ namespace VC.Wallet.Core
         [JsonPropertyOrder(1)]
         public string id { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyOrder(2)]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string name { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        [JsonPropertyOrder(3)]
         public List<string> type { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        [JsonPropertyOrder(4)]
+        [JsonPropertyOrder(3)]
         public Achievement achievement { get; set; }
     }
 
@@ -88,6 +84,7 @@ namespace VC.Wallet.Core
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyOrder(5)]
         public Criteria criteria { get; set; }
+
     }
 
     public class Criteria

@@ -6,11 +6,7 @@ namespace VC.Wallet.Core
         public ICryptoAlgorithm<T> Create<T>()
             where T : class, new()
         {
-            if(typeof(T) == typeof(ECJwk))
-            {
-                return (ICryptoAlgorithm<T>) new ECAlgorithm();
-            }
-            else if(typeof(T) == typeof(RSAJwk))
+            if(typeof(T) == typeof(RSAJwk))
             {
                 return (ICryptoAlgorithm<T>) new RSAAlgorithm();
             }

@@ -48,11 +48,6 @@
                                 <dd>@Model?.AchievementCredential?.validFrom</dd>
                                 <dt>Recepient Id</dt>
                                 <dd>@Model?.AchievementCredential?.credentialSubject?.id?.Truncate(40)</dd>
-                                @if (!string.IsNullOrEmpty(Model?.AchievementCredential?.credentialSubject?.name))
-                                {
-                                    <dt>Recepient Name</dt>
-                                    <dd>@Model?.AchievementCredential?.credentialSubject?.name</dd>
-                                }
                                 <dt>Credential Description</dt>
                                 <dd>@Model?.AchievementCredential?.credentialSubject?.achievement?.description</dd>
                             </dl>

@@ -9,9 +9,7 @@
         public string ToJwtCompact(Jwt jwt);
         public Jwt JwtFromJwtCompact(string jwtCompact);
         public JwtDecoded DecodeJwt(Jwt jwt);
-        public T GetUnverifiedPublicJwk<T>(string jwtCompact)
+        public T GetPublicJwk<T>(string jwtCompact)
             where T : class, new();
-        public string HashString(string value);
-        public JwkBase GetPublicJwkBase(string jwtCompact);
     }
 }

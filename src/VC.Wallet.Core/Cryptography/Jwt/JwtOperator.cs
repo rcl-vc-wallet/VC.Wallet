@@ -1,7 +1,6 @@
 ﻿#nullable disable
 
 using Microsoft.IdentityModel.Tokens;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -12,20 +11,20 @@ namespace VC.Wallet.Core
         private const string _typ = "JWT";
 
         public Jwt Sign<T>(object payload, Keys keys, ICryptoAlgorithm<T> cryptoAlgorithm, string keyId = "")
-            where T : class, new()
+                   where T : class, new()
         {
-            T jwk = null;
+            JwtHeader<T> jwtHeader = null;
 
             if (keyId == "")
             {
-                jwk = cryptoAlgorithm.GetPublicJwk(keys.publicKey,_typ);
+                jwtHeader = cryptoAlgorithm.GetJwtHeader(keys.publicKey, _typ);
             }
             else
             {
-                jwk = cryptoAlgorithm.SetPublicJwkKeyId(keyId,_typ);
+                jwtHeader = cryptoAlgorithm.SetKeyIdJwtHeader(keyId, _typ);
             }
 
-            string jsonJwsHeader = JsonSerializer.Serialize(jwk);
+            string jsonJwsHeader = JsonSerializer.Serialize(jwtHeader);
 
             string jsonJwsHeaderEncoded = Base64UrlEncoder.Encode(Encoding.UTF8.GetBytes(jsonJwsHeader));
 
@@ -56,24 +55,6 @@ namespace VC.Wallet.Core
             byte[] signature = Base64UrlEncoder.DecodeBytes(jwt.encodedSignature);
 
             return cryptoAlgorithm.VerifySignature(data, signature, publicKey);
-        }
-
-        public string HashString(string value)
-        {
-            StringBuilder Sb = new StringBuilder();
-
-            using (var hash = SHA256.Create())
-            {
-                Encoding enc = Encoding.UTF8;
-                byte[] result = hash.ComputeHash(enc.GetBytes(value));
-
-                foreach (byte b in result)
-                {
-                    Sb.Append(b.ToString("x2"));
-                }
-            }
-
-            return Sb.ToString();
         }
 
         public string ToJwtCompact(Jwt jwt)
@@ -118,17 +99,11 @@ namespace VC.Wallet.Core
             return decoded;
         }
 
-        public T GetUnverifiedPublicJwk<T>(string jwtCompact)
+        public T GetPublicJwk<T>(string jwtCompact)
              where T : class, new()
         {
             string jwtDecodedHeader = DecodeJwtCompactHeader(jwtCompact);
             return JsonSerializer.Deserialize<T>(jwtDecodedHeader);
-        }
-
-        public JwkBase GetPublicJwkBase(string jwtCompact)
-        {
-            string jwtDecodedHeader = DecodeJwtCompactHeader(jwtCompact);
-            return JsonSerializer.Deserialize<JwkBase>(jwtDecodedHeader);
         }
 
         private string DecodeJwtCompactHeader(string jwtCompact)

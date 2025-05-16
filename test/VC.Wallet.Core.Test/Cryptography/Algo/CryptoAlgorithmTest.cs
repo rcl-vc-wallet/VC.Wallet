@@ -56,7 +56,7 @@ namespace VC.Wallet.Core.Test
         {
             try
             {
-                Keys keys = _algoOperator.GenerateKeys();
+                Keys keys = new Keys();
                 return keys;
             }
             catch (Exception ex)

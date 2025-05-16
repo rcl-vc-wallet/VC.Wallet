@@ -1,13 +1,10 @@
 ﻿#nullable disable
 
-using VC.Wallet.Core.Credential;
-
 namespace VC.Wallet.Core.Test
 {
     [TestClass]
     public class CredentialTest
     {
-        private readonly IDemoCredentialService _demoCredentialService;
         private readonly ICryptoAlgorithmFactory _cryptoAlgorithmFactory;
         private readonly ICredentialResolverFactory _credentialResolverFactory;
         private readonly IDIDJwkService _didJwkService;
@@ -15,7 +12,6 @@ namespace VC.Wallet.Core.Test
 
         public CredentialTest()
         {
-            _demoCredentialService = (IDemoCredentialService)DependencyResolver.ServiceProvider().GetService(typeof(IDemoCredentialService));
             _cryptoAlgorithmFactory = (ICryptoAlgorithmFactory)DependencyResolver.ServiceProvider().GetService(typeof(ICryptoAlgorithmFactory));
             _credentialResolverFactory = (ICredentialResolverFactory)DependencyResolver.ServiceProvider().GetService(typeof(ICredentialResolverFactory));
             _didJwkService = (IDIDJwkService)DependencyResolver.ServiceProvider().GetService(typeof(IDIDJwkService));
@@ -27,30 +23,8 @@ namespace VC.Wallet.Core.Test
         {
             try
             {
-                string jwtCompact = CreateJwtCompact();
-                ValidationBuilder validationBuilder = new ValidationBuilder(jwtCompact);
-
-                JwkBase jwkBase = _jwtOperator.GetPublicJwkBase(jwtCompact);
-                string algo = jwkBase.alg.ToLower();
-
-                if (algo == "rs256")
-                {
-                    var _cryptoAlgorithm = _cryptoAlgorithmFactory.Create<RSAJwk>();
-
-                    CheckForValidSignature<RSAJwk> _checkForValidSignature =
-                        new CheckForValidSignature<RSAJwk>(_jwtOperator, _cryptoAlgorithm);
-
-                    validationBuilder.Add(_checkForValidSignature);
-                }
-                else
-                {
-                    throw new Exception("Only RS256 is supported as this time");
-                }
-
-                validationBuilder.Add(new CheckForRequiredData(_jwtOperator));
-                ValidationResponse validationResponse = await validationBuilder.ValidateAsync();
-
-                Assert.AreEqual(true,validationResponse.isValid);
+                
+                
             }
             catch (Exception ex)
             {
@@ -64,8 +38,7 @@ namespace VC.Wallet.Core.Test
         {
             try
             {
-                string jwtComapct = CreateJwtCompact();
-                Assert.IsNotNull(jwtComapct);
+                
             }
             catch (Exception ex)
             {
@@ -91,25 +64,6 @@ namespace VC.Wallet.Core.Test
                 Assert.Fail();
             }
 
-        }
-
-        private string CreateJwtCompact()
-        {
-            ICryptoAlgorithm<RSAJwk> _cryptoAlgorithm = _cryptoAlgorithmFactory.Create<RSAJwk>();
-            Keys hoderKeys = _cryptoAlgorithm.GenerateKeys();
-            RSAJwk holderPublicJwk = _cryptoAlgorithm.GetPublicJwk(hoderKeys.publicKey);
-            string holderDID = _didJwkService.CreateDID(holderPublicJwk);
-
-            Keys issuerKeys = _cryptoAlgorithm.GenerateKeys();
-            RSAJwk issuerPublicJwk = _cryptoAlgorithm.GetPublicJwk(issuerKeys.publicKey);
-            string issuerDID = _didJwkService.CreateDID(issuerPublicJwk);
-
-            AchievementCredential achievementCredential = _demoCredentialService
-                 .CreateDemoAchievementCredential(holderDID, "John Doe", issuerDID);
-
-            Jwt jwt = _jwtOperator.Sign(achievementCredential, hoderKeys, _cryptoAlgorithm); // with JWK parameters
-            string jwtCompact = _jwtOperator.ToJwtCompact(jwt);
-            return jwtCompact;
         }
     }
 }

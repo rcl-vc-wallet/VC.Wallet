@@ -67,7 +67,7 @@ namespace VC.Wallet.WebApp.Areas.HolderDID.Pages
                             rsaPrivateKey = await reader.ReadToEndAsync();
                         }
 
-                        bool b = ValidateDID(HolderDID.did, rsaPrivateKey);
+                        bool b = await ValidateDIDAsync(HolderDID.did, rsaPrivateKey);
 
                         if (b == true)
                         {
@@ -96,13 +96,19 @@ namespace VC.Wallet.WebApp.Areas.HolderDID.Pages
             return Page();
         }
 
-        private bool ValidateDID(string DID, string rsaPrivateKey)
+        private async Task<bool> ValidateDIDAsync(string DID, string rsaPrivateKey)
         {
             bool b = false;
 
             try
             {
                 RSAJwk rsaPublicJwk = _didJWKService.GetPublicJwk<RSAJwk>(DID);
+
+                if (string.IsNullOrEmpty(rsaPublicJwk?.kid))
+                {
+                    rsaPublicJwk = await _rsaOperator.GetPublicJwkFromKidAsync(rsaPublicJwk.kid);
+                }
+
                 string rsaPublicKey = _rsaOperator.GetPublicKey(rsaPublicJwk);
 
                 Keys keys = new Keys()
@@ -111,13 +117,13 @@ namespace VC.Wallet.WebApp.Areas.HolderDID.Pages
                     privateKey = rsaPrivateKey,
                 };
 
-                Jwt jwt = _jwtOperator.Sign(_payload,keys, _rsaOperator);
+                Jwt jwt = _jwtOperator.Sign(_payload, keys, _rsaOperator);
                 string jwtCompact = _jwtOperator.ToJwtCompact(jwt);
-                b = _jwtOperator.Verify(jwtCompact, rsaPublicKey,_rsaOperator);
+                b = _jwtOperator.Verify(jwtCompact, rsaPublicKey, _rsaOperator);
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw new Exception($"Could not validate DID. {ex.Message}");
             }
 
             return b;

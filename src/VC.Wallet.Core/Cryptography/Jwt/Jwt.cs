@@ -34,4 +34,11 @@ namespace VC.Wallet.Core
         [JsonPropertyOrder(1)]
         public string decodedSignature { get; set; }
     }
+
+    public class JwtHeader<T> where T : class
+    {
+        public string alg { get; set; }
+        public string typ { get; set; }
+        public T jwk { get; set; }
+    }
 }
