@@ -15,7 +15,6 @@ namespace VC.Wallet.WebApp.Areas.HolderCredential.Pages
     {
         private readonly IHolderCredentialService _holderCredentialService;
         private readonly IHolderCredentialGroupService _holderCredentialGroupService;
-        private readonly IImageFactory _imageFactory;
         private readonly ICryptoAlgorithmFactory _cryptoAlgorithmFactory;
         private readonly IJwtOperator _jwtOperator;
 
@@ -26,13 +25,11 @@ namespace VC.Wallet.WebApp.Areas.HolderCredential.Pages
 
         public AddModel(IHolderCredentialService holderCredentialService,
             IHolderCredentialGroupService holderCredentialGroupService,
-            IImageFactory imageFactory,
             ICryptoAlgorithmFactory cryptoAlgorithmFactory,
             IJwtOperator jwtOperator)
         {
             _holderCredentialService = holderCredentialService;
             _holderCredentialGroupService = holderCredentialGroupService;
-            _imageFactory = imageFactory;
             _cryptoAlgorithmFactory = cryptoAlgorithmFactory;
             _jwtOperator = jwtOperator;
         }
@@ -161,22 +158,9 @@ namespace VC.Wallet.WebApp.Areas.HolderCredential.Pages
                     ext = fileUpload.FileName.Substring(fileExtPos, fileUpload.FileName.Length - fileExtPos).ToLower();
                 }
 
-                if (ext?.ToLower() == ".png")
+                if (ext?.ToLower() == ".jwt")
                 {
-                    HolderCredential.fileType = "png";
-                    IImageService pngService = _imageFactory.Create(ImageType.PNG);
-                    using (var ms = new MemoryStream())
-                    {
-                        fileUpload.CopyTo(ms);
-                        var fileBytes = ms.ToArray();
-                        string base64String = Convert.ToBase64String(fileBytes);
-                        HolderCredential.file = $"data:image/png;base64,{base64String}";
-                        jwtCompact = pngService.ReadEmbeddedTextFromImageMetaData(fileBytes, "openbadgecredential");
-                    }
-                }
-                else if (ext?.ToLower() == ".txt")
-                {
-                    HolderCredential.fileType = "txt";
+                    HolderCredential.fileType = "jwt";
                     var result = new StringBuilder();
                     using (var reader = new StreamReader(fileUpload.OpenReadStream()))
                     {
@@ -190,7 +174,7 @@ namespace VC.Wallet.WebApp.Areas.HolderCredential.Pages
                 }
                 else
                 {
-                    throw new Exception("Invalid file type. Only .png and .txt allowed");
+                    throw new Exception("Invalid file type. .jwt allowed");
                 }
             }
             catch (Exception ex)

@@ -12,9 +12,9 @@
 
         public ICredentialResolver Create(string credentialFileType)
         {
-            if(credentialFileType == "txt")
+            if(credentialFileType == "jwt")
             {
-                return new CredentialResolverTxt(_jwtOperator);
+                return new CredentialResolverJwt(_jwtOperator);
             }
             else
             {

@@ -1,9 +1,9 @@
 ﻿
 namespace VC.Wallet.Core
 {
-    internal class CredentialResolverTxt : CredentialResolverBase, ICredentialResolver
+    internal class CredentialResolverJwt : CredentialResolverBase, ICredentialResolver
     {
-        public CredentialResolverTxt(IJwtOperator jwtOperator) : base(jwtOperator)
+        public CredentialResolverJwt(IJwtOperator jwtOperator) : base(jwtOperator)
         {
         }
 
